@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.buzzbuddy.android.CheckableRowItem xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="?android:attr/listPreferredItemHeight"
+    android:orientation="horizontal" >
+
+   
+    <TextView
+        android:id="@+id/case_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="0.5"
+        android:ellipsize="marquee"
+        android:textIsSelectable="false"
+        android:singleLine="true" />
+
+   
+</com.buzzbuddy.android.CheckableRowItem>
