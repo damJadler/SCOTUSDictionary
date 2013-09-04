@@ -16,16 +16,29 @@ import com.emilsjolander.components.stickylistheaders.StickyListHeadersListView;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.app.SearchManager;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
+import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnKeyListener;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.SearchView;
+import android.widget.SearchView.OnCloseListener;
+import android.widget.SearchView.OnQueryTextListener;
 
-public class MainActivity extends ListActivity implements Comparator {
+public class MainActivity extends ListActivity implements Comparator, OnQueryTextListener, OnCloseListener {
 	
 	protected static final String FILE_NAME = "fileName";
 	//String[]fileList;
@@ -35,6 +48,26 @@ public class MainActivity extends ListActivity implements Comparator {
 	private StickyListHeadersListView stickyList;
 	InputStream in;
 	BufferedReader reader;
+	MyAdapter adapter;
+	
+	String infoStringA="Foreign names in legal matters present a " +
+			"particular challenge for legal professionals, and " +
+			"the Pronouncing Dictionary of United States Supreme" +
+			" Court—compiled by a collaboration between the Yale " +
+			"Law School and the Yale University Linguistics " +
+			"Department—strives to help conscientious lawyers, " +
+			"judges, teachers, students, and journalists correctly " +
+			"pronounce often-perplexing case names.";
+    	 
+	String infoStringB="Drawing on textbooks, recordings, accounts by" +
+			" litigants or counsel, pronunciation guides, journalism, " +
+			"and surveys, we have identified those Supreme Court cases " +
+			"that are most susceptible of mispronunciation and " +
+			"determined the proper pronunciation. To be sure, " +
+			"this is an inexact process, but we hope it will " +
+			"be a useful tool for those seeking accuracy and " +
+			"authenticity.\n\n For more information, go to " +
+			"http://documents.law.yale.edu/pronouncing-dictionary";
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +104,8 @@ public class MainActivity extends ListActivity implements Comparator {
 		
 		stickyList = (StickyListHeadersListView) getListView();
 		Collections.sort(caseList, this);
-		MyAdapter adapter = new MyAdapter(this, caseList);
+		//MyAdapter adapter = new MyAdapter(this, caseList, "");
+		adapter = new MyAdapter(this, caseList);
 		setListAdapter(adapter);
 		getListView().setFastScrollEnabled(true);
 		//getListView().setFastScrollAlwaysVisible(true);
@@ -199,14 +233,91 @@ public class MainActivity extends ListActivity implements Comparator {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.options_menu, menu);
+	    
+	    final CloseableSearchView searchView=(CloseableSearchView)menu.findItem(R.id.search).getActionView();
+	    	    
+	    searchView.setAdapter(adapter);
+	    searchView.setOnQueryTextListener(this);
+	    searchView.setOnCloseListener(this);
+	    String hint=this.getString(R.string.search_hint);
+	    searchView.setQueryHint(hint);
+	    
+	    searchView.setOnKeyListener(new OnKeyListener()
+	    {
+	    	 /**
+	         * This listens for the user to press the enter button on 
+	         * the keyboard and then hides the virtual keyboard
+	         */
+	   	public boolean onKey(View arg0, int arg1, KeyEvent event) {
+	           // If the event is a key-down event on the "enter" button
+	           if ( (event.getAction() == KeyEvent.ACTION_DOWN  ) &&
+	                (arg1           == KeyEvent.KEYCODE_ENTER)   )
+	           {               
+	           	InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+	                   imm.hideSoftInputFromWindow(searchView.getWindowToken(), 0);   
+	                   return true;
+	           }
+	           return false;
+	        }
+	   } );
+	   
+	    
+	    
+	    /*// Associate searchable configuration with the SearchView
+	    SearchManager searchManager =
+	           (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+	    SearchView searchView =
+	            (SearchView) menu.findItem(R.id.case_name).getActionView();
+	    searchView.setSearchableInfo(
+	            searchManager.getSearchableInfo(getComponentName()));*/
+
+
+	    return true;
 	}
+	
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		if(item.getItemId()==R.id.info)
+		{
+			// 1. Instantiate an AlertDialog.Builder with its constructor
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+			// 2. Chain together various setter methods to set the dialog characteristics
+			
+			
+			builder.setMessage(infoStringA+"\n\n"+infoStringB);
+			builder.setTitle(R.string.dialog_title);
+			
+			//builder.setMessage(R.string.dialog_message)
+			  //     .setTitle(R.string.dialog_title);
+			
+			// Add the buttons
+			builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+			           public void onClick(DialogInterface dialog, int id) {
+			               // User clicked OK button
+			           }
+			       });
+
+			// 3. Get the AlertDialog from create()
+			AlertDialog dialog = builder.create();
+			dialog.show();
+		}
+		return false;
+	}
+	
+	/*public void onBackPressed()
+	{
+		adapter.getFilter().filter("");
+		super.onBackPressed();
+	}*/
+	
 	
 	public void onDestroy()
 	{
 		media.reset();
+		super.onDestroy();
 	}
 
 	@Override
@@ -219,6 +330,47 @@ public class MainActivity extends ListActivity implements Comparator {
 		
 		
 	}
+
+	@Override
+	public boolean onQueryTextChange(String newText) {
+		
+		if (newText.equals(""))
+	    adapter.getFilter().filter("");
+		else 
+		{
+			adapter.getFilter().filter(newText.toString());
+		}
+			
+		
+		return true;
+	}
+
+	@Override
+	public boolean onQueryTextSubmit(String query) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean onClose() {
+		adapter.getFilter().filter("");
+		return true;
+	}
+	
+	/*protected void onNewIntent(Intent intent)
+	{
+		handleIntent(intent);
+	}
+
+	private void handleIntent(Intent intent) {
+		 if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+	            String query = intent.getStringExtra(SearchManager.QUERY);
+
+	            MyAdapter adapter = new MyAdapter(this, caseList, query);
+	    		setListAdapter(adapter);
+	        }
+		
+	}*/
 
 
 }

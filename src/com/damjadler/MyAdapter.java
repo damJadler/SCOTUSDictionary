@@ -1,6 +1,7 @@
 package com.damjadler;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import com.emilsjolander.components.stickylistheaders.StickyListHeadersAdapter;
 
@@ -14,21 +15,39 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 
-public class MyAdapter extends BaseAdapter implements StickyListHeadersAdapter, SectionIndexer {
+public class MyAdapter extends BaseAdapter implements StickyListHeadersAdapter, SectionIndexer, Filterable {
 
-	private ArrayList<Case> caseList;
+	private ArrayList<Case> caseList, originalList;
 	private LayoutInflater inflater;
+	private CaseFilter filter;
 	String sectionStart="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	String sections="";
+	//String search="";
 	
 	public MyAdapter(Context context, ArrayList<Case> cases)
 	{
 		super();
 		inflater = LayoutInflater.from(context);
 		caseList=cases;
+		originalList=new ArrayList<Case>(cases.size());
+		originalList=(ArrayList<Case>) caseList.clone();
+		//search=searchQuery;
+		//filterCases();
+		setSections();
+		
+		filter=new CaseFilter();
+		
+		
+		
+	}
+	
+	private void setSections() {
+		sections="";
 		for(int x=0;x<sectionStart.length();x++)
 		{
 			String firstChar=""+sectionStart.charAt(x);
@@ -47,7 +66,19 @@ public class MyAdapter extends BaseAdapter implements StickyListHeadersAdapter, 
 		}
 		
 	}
-	
+
+	/*private void filterCases() {
+		for(int x=0;x<caseList.size();x++)
+		{
+			if(!caseList.get(x).caseName.contains(search))
+			{
+				caseList.remove(x);
+				x--;
+			}
+		}
+		
+	}*/
+
 	@Override
 	public int getCount() {
 		// TODO Auto-generated method stub
@@ -93,8 +124,13 @@ public class MyAdapter extends BaseAdapter implements StickyListHeadersAdapter, 
 		
 		int index=-1;
 		
+		String originalFullName=fullName;
+		
 		fullName=fullName.replace("é", "e");
 		fullName=fullName.replace("ã", "a");
+		fullName=fullName.replace("ç", "c");
+		fullName=fullName.replace("ö", "o");		
+		
 		//if(fullName.contains("St. Cyr"))
 			//index=-1;
 		
@@ -108,12 +144,12 @@ public class MyAdapter extends BaseAdapter implements StickyListHeadersAdapter, 
 		String lastPart=fullName.substring(index+difficultName.length());
 		
 		
-		Spannable toSpan=new SpannableString(fullName);
+		Spannable toSpan=new SpannableString(originalFullName);
 		toSpan.setSpan(new ForegroundColorSpan(Color.BLUE), index, index+difficultName.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		holder.caseName.setText(toSpan);
 		}
 		else
-		holder.caseName.setText(fullName);
+		holder.caseName.setText(originalFullName);
 
 		return convertView;
 	}
@@ -182,8 +218,49 @@ public class MyAdapter extends BaseAdapter implements StickyListHeadersAdapter, 
 		// TODO Auto-generated method stub
 		return sectionsArr;
 	}
-	
-	
-	
 
+	@Override
+	public Filter getFilter() {
+		// TODO Auto-generated method stub
+		return filter;
+	}
+	
+	private class CaseFilter extends Filter
+	{
+		 @Override
+	        protected FilterResults performFiltering(CharSequence constraint) {
+	            FilterResults oReturn = new FilterResults();
+	            ArrayList<Case> results = new ArrayList<Case>();
+	            
+	            if (constraint != null) {
+	                if (originalList != null && originalList.size() > 0) {
+	                    constraint=constraint.toString().toLowerCase();
+	                	for(int x=0;x<originalList.size();x++) 
+	                	{
+	                    	Case temp=originalList.get(x);
+	                    	String caseName=temp.getCaseName();
+	                    	caseName=caseName.toLowerCase();
+	                    	
+	                        if (caseName.contains(constraint))
+	                               results.add(originalList.get(x));
+	                    }
+	                }
+	                oReturn.values = results;
+	            }
+	            return oReturn;
+	        }
+
+	        @SuppressWarnings("unchecked")
+	        @Override
+	        protected void publishResults(CharSequence constraint,
+	                FilterResults results) {
+	        	caseList = (ArrayList<Case>) results.values;
+	        	setSections();
+	            notifyDataSetChanged();
+	        }
+
+	    		
+	}
 }
+
+

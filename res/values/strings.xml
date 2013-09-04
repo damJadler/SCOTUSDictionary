@@ -2,7 +2,19 @@
 <resources>
 
     <string name="app_name">Supreme Court Dictionary</string>
+     <string name="search_hint">Search Case Names</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
+     <string name="search_title">Search</string>
+     <string name="info_title">Info</string>
+     <string name="dialog_message">
+        
+         Foreign names in legal matters present a particular challenge for legal professionals, and the Pronouncing Dictionary of United States Supreme Court—compiled by a collaboration between the Yale Law School and the Yale University Linguistics Department—strives to help conscientious lawyers, judges, teachers, students, and journalists correctly pronounce often-perplexing case names.
+    	 Drawing on textbooks, recordings, accounts by litigants or counsel, pronunciation guides, journalism, and surveys, we have identified those Supreme Court cases that are most susceptible of mispronunciation and determined the proper pronunciation. To be sure, this is an inexact process, but we hope it will be a useful tool for those seeking accuracy and authenticity.
+	
+	</string>
+	<string name="dialog_title">About</string>
+	<string name="ok">@android:string/ok</string>
+     
 
 </resources>
